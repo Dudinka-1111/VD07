@@ -1,26 +1,34 @@
-from flask import Flask, render_template, redirect, url_for, flash
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key_here'
 
-class EditProfileForm(FlaskForm):
-    username = StringField('Имя пользователя', validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField('Электронная почта', validators=[DataRequired(), Email()])
-    password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Подтвердите пароль', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Сохранить изменения')
+# Пример данных пользователя
+user_data = {
+    "name": "Иван Иванов",
+    "email": "ivan@example.com",
+    "password": "password123"  # Никогда не храните пароли в открытом виде
+}
 
-@app.route('/edit_profile', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def edit_profile():
-    form = EditProfileForm()
-    if form.validate_on_submit():
-        # Здесь вы можете обработать изменения профиля, например, сохранить их в базе данных.
-        flash('Ваш профиль был обновлен!', 'success')
-        return redirect(url_for('edit_profile'))
-    return render_template('edit_profile.html', form=form)
+    if request.method == 'POST':
+        # Получение данных из формы
+        new_name = request.form.get('name')
+        new_email = request.form.get('email')
+        new_password = request.form.get('password')
+
+        # Обновление данных пользователя
+        user_data['name'] = new_name
+        user_data['email'] = new_email
+        user_data['password'] = new_password  # Не забудьте про хеширование в реальном приложении
+
+        return redirect(url_for('profile'))
+
+    return render_template('edit_profile.html', user=user_data)
+
+@app.route('/profile')
+def profile():
+    return render_template('profile.html', user=user_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
